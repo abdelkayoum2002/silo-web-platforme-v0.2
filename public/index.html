@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>MQTT Dashboard</title>
+  <script src="/socket.io/socket.io.js"></script>
+  <script type="module" src="main.js" defer></script>
+    <style>
+    #status { font-weight: bold; }
+    #status.connected { color: green; }
+    #status.disconnected { color: red; }
+    #status.connecting { color: orange; }
+  </style>
+</head>
+<body>
+    <input id="url" type="text" required>
+    <h2>MQTT Network Status: <span id="status" class="disconnected">Disconnected</span></h2>
+    <button id="connectBtn">Connect to MQTT</button>
+    <button id="disconnectBtn">Disconnect</button>
+    <br><select id="topicType">
+      <option value="EmergencyTopic">EmergencyTopic</option>
+      <option value="AlertTopic">AlertTopic</option>
+      <option value="MessageTopic">MessageTopic</option>
+      <option value="CommandTopic">CommandTopic</option>
+      <option value="SensorTopic">SensorTopic</option>
+      <option value="Others">Others</option>
+    </select>
+    <input id="topic" type="text">
+    <select id="qos">
+      <option value="0">0 - At most once (fire and forget)</option>
+      <option value="1">1 - At least once (acknowledged delivery)</option>
+      <option value="2">2 - Exactly once (assured delivery)</option>
+    </select>
+    <button id="subscribeBtn">Subscribe</button>
+    <hr>
+    <div id="topics-container"></div>
+    <div id="messages"></div>
+    <div id="error" style="background-color: red;"></div>
+    <div id="notification"></div>
+<script src="scripte.js"></script>
+</body>
+</html>
