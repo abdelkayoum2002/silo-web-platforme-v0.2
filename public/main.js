@@ -9,6 +9,7 @@ registerSocketEvents(socket);
 let notificationContainer = null;
 
 export function showNotification(message, type = 'MessageTopic', duration = 3000) {
+  if(type=='CommandTopic'){return;}
   // Create container if it doesn't exist
   if (!notificationContainer) {
     notificationContainer = document.createElement('div');
@@ -121,7 +122,6 @@ export function showNotification(message, type = 'MessageTopic', duration = 3000
   // Schedule auto-hide
   hideTimeout = setTimeout(() => hideNotification(), duration);
 }
-
 
   
   

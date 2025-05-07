@@ -7,86 +7,67 @@
   <!-- Load main.js and other necessary scripts -->
   <script src="/socket.io/socket.io.js"></script>
   <script type="module" src="main.js" defer></script>
+  <script>
+    function decodeMQTTMessage(message) {
+    try {
+   // Try parsing the message as JSON
+   const data = JSON.parse(message);
 
+   // Return the decoded object
+   return data;
+ } catch (error) {
+   console.error("Invalid JSON message:", message);
+   return null; // or throw error if you want to handle it upstream
+ }
+}
+  </script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      socket.on('mqtt_message', (data) => {
+        if (window.msg.type === 'CommandTopic') {
+          const decoded = decodeMQTTMessage(window.msg.message);
+          if (decoded) {
+            document.getElementById("message").innerText = JSON.stringify(decoded, null, 2);
+            document.getElementById("tempDisplay").innerText = decoded.temperature;
+            document.getElementById("humidityDisplay").innerText = decoded.humidity;
+            document.getElementById("ledStatus").checked = decoded.led;
+            document.getElementById("fanStatus").checked = decoded.fan;
+
+          }
+        }
+      });
+      socket.on('topics', (data) => {
+        
+    });
+    });
+  </script>
+  
   <title>Dashboard</title>
 </head>
 <body>
-  <div class="dashboard">
-    <h2>IoT Monitoring Dashboard</h2>
-
-    <div class="indicator">
-      <span class="label">Temperature LED:</span>
-      <input type="checkbox" id="tempCheck" onchange="toggleLED('tempLED', this)">
-      <span id="tempLED" class="led off"></span>
-    </div>
-
-    <div class="indicator">
-      <span class="label">Humidity LED:</span>
-      <input type="checkbox" id="humidityCheck" onchange="toggleLED('humidityLED', this)">
-      <span id="humidityLED" class="led off"></span>
-    </div>
-
-    <button class="btn-stop" onclick="emergencyStop()">EMERGENCY STOP</button>
-
-    <h2>MQTT Publisher</h2>
-    <div class="mqtt">
-      <label for="topic">Topic</label>
-      <input list="options" id="topic" />
-      <datalist id="options">
-        <option value="sensor/temperature">
-        <option value="sensor/humidity">
-        <option value="system/emergency">
-      </datalist>
-
-      <label for="message">Message</label>
-      <input type="text" id="message">
-
-      <label for="qos">QoS</label>
-      <select id="qos">
-        <option value="0">0 - At most once</option>
-        <option value="1">1 - At least once</option>
-        <option value="2">2 - Exactly once</option>
-      </select>
-
-      <label>
-        <input type="checkbox" id="retain"> Retain
-      </label>
-
-      <button id="publishBtn" onclick="publishMessage()">Publish</button>
-      <div id="notification">Message Published Successfully!</div>
-    </div>
+  <h1>MQTT Sensor Dashboard</h1>
+  <div class="card">
+    <div><span class="label">Temperature:</span> <span id="tempDisplay">--</span> °C</div>
+    <div><span class="label">Humidity:</span> <span id="humidityDisplay">--</span> %</div>
+    <div><span class="label">LED Status:</span> <input id="ledStatus" type="checkbox"></div>
+    <div><span class="label">Fan Status:</span> <input id="fanStatus" type="checkbox"></div>
+    <div><span class="label">Timestamp:</span> <span id="timestamp">--</span></div>
+    <hr>
+    <pre id="message"></pre>
   </div>
 
   <script>
-    // Event listener for the DOMContentLoaded event
     document.addEventListener('DOMContentLoaded', () => {
-      socket.on('topics', (data) => {
-        refrecheTopics();
-    });
-
-      // Publish button event
-      const publishBtn = document.getElementById("publishBtn");
-      publishBtn.addEventListener('click', () => {
-        const topic = document.getElementById('topic').value || undefined;
-        const message = document.getElementById('message').value;
-        const qos = parseInt(document.getElementById('qos').value);
-        const retain = document.getElementById('retain').checked;
-        window.socket.emit('publish', { topic, message, qos, retain });
-      });
-      function refrecheTopics(){
-        if (window.topics?.Others) {
-          console.log("Window topics:", window.topics.Others);
-          const datalist = document.getElementById("options");
-          // Populate the datalist with topics
-          window.topics.Others.forEach(item => {
-            const option = document.createElement("option");
-            option.value =null;
-            option.value = item.topic;
-            datalist.appendChild(option);
-          });
-      }
-    }
+       document.getElementById('ledStatus').addEventListener('click', () => {
+        console.log(document.getElementById('ledStatus').checked);
+        if(!window.msg.message){window.msg.message={led: document.getElementById('ledStatus').checked }}
+        else {window.msg.message.led=document.getElementById('ledStatus').checked;}
+        console.log(document.getElementById('ledStatus').checked)
+        console.log(window.msg.message)
+        window.socket.emit('publish', { topic: window.topics.CommandTopic[0].topic, message: JSON.stringify(window.msg.message), qos: 1, retain:false });
+       })
     });
   </script>
+</body>
 </body>
 </html>
