@@ -1,4 +1,4 @@
-const { subscribe } = require('diagnostics_channel');
+const { subscribe, unsubscribe } = require('diagnostics_channel');
 const mqtt = require('mqtt');
 
 let socket=null;
@@ -96,14 +96,15 @@ function subscribeToTopic(type, topic, qos) {
     socket.emit('mqtt_error',mqttError);
     console.error(mqttError.type,mqttError.message);
     return;}
-  const existe= topicExists(topic,type)
+  const existe= topicExists(topic)
+  console.log(existe);
   if(existe){
-    if (existe === type) continue; // Skip current category
+  if(existe.status!=='unsubscribe'){
     mqttError = {type: 'subscribtion_error', message: `topic already exists in type [${existe}]`};
     socket.emit('mqtt_error',mqttError);
     console.error(mqttError.type,mqttError.message);
     return;
-  }
+  }}
   console.log(topics);
   qos = Number(qos);
   mqttClient.subscribe(topic, { qos }, (err) => {
@@ -164,10 +165,10 @@ function deleteTopic(topic) {
 
 function topicExists(topicToFind, currentCategory) {
   for (const category in topics) {
-
+    // if (category === currentCategory) continue; // Skip current category
     if (Array.isArray(topics[category])) {
       const found = topics[category].some(entry => entry.topic === topicToFind);
-      if (found) return category;
+      if (found) return { category: category, status: topics[category].status };
     }
   }
   return null;
