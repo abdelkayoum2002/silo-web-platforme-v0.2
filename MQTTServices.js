@@ -5,6 +5,7 @@ let socket=null;
 let mqttClient=null;
 let mqttStatus ='disconnected';
 let mqttError = null;
+let mqttMessage = null;
 const PREDEFINED_TYPES = ["EmergencyTopic", "AlertTopic", "MessageTopic", "CommandTopic", "SensorTopic"];
 const topics={};
 
@@ -52,13 +53,15 @@ function connectToMQTT(url, options) {
     });
   
     mqttClient.on('message', (topic, message) => {
-      const type = topicExists(topic);
+      const exict = topicExists(topic);
+      const type = exict.type
       console.log(`[${type}] ${topic} ${message}`)
-      socket.emit('mqtt_message', {
+      mqttMessage= {
         type,
         topic,
         message: message.toString()
-      });
+      }
+      socket.emit('mqtt_message', mqttMessage);
     });
   
     mqttClient.on('error', (err) => {
@@ -99,7 +102,7 @@ function subscribeToTopic(type, topic, qos) {
   const existe= topicExists(topic)
   console.log(existe);
   if(existe){
-  if(existe.status!=='unsubscribe'){
+    if (existe === type) continue; // Skip current category
     mqttError = {type: 'subscribtion_error', message: `topic already exists in type [${existe}]`};
     socket.emit('mqtt_error',mqttError);
     console.error(mqttError.type,mqttError.message);
@@ -165,14 +168,15 @@ function deleteTopic(topic) {
 
 function topicExists(topicToFind, currentCategory) {
   for (const category in topics) {
-    // if (category === currentCategory) continue; // Skip current category
+
     if (Array.isArray(topics[category])) {
       const found = topics[category].some(entry => entry.topic === topicToFind);
-      if (found) return { category: category, status: topics[category].status };
+      if (found) return category;
     }
   }
-  return null;
+  return null; // Topic not found
 }
+  
 
 function publishToTopic(topic,message,qos,retain){
   if(!mqttClient){
@@ -202,6 +206,7 @@ module.exports = {
     disconnectMQTT,
     deleteTopic,
     publishToTopic,
+    message: () => mqttMessage,
     topics: () => topics,
     status: () => mqttStatus,
     error : () => mqttError

@@ -1,6 +1,7 @@
 // public/socketEvents.js
 import { showNotification } from "./main.js";
 window.topics = {};
+window.msg={};
 export function registerSocketEvents(socket) {
     socket.on('connect', () => {
       console.log('[socket] connected');
@@ -13,7 +14,8 @@ export function registerSocketEvents(socket) {
   
     socket.on('mqtt_message', (data) => {
       console.log('[mqtt_message]', data);
-      showNotification(data.message,data.type,);
+      showNotification(data.message,data.type);
+      window.msg=data;
     });
   
     socket.on('mqtt_error', (data) => {

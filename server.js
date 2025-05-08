@@ -14,6 +14,7 @@ MQTTService.init(io);
 
 io.on('connection', (socket) => {
     console.log('User connected',socket.id);
+    socket.emit('mqtt_message', MQTTService.message());
     socket.emit('mqtt_status', { status: MQTTService.status() });
     socket.emit('mqtt_error',MQTTService.error());
     socket.emit('topics',MQTTService.topics());
@@ -35,6 +36,7 @@ io.on('connection', (socket) => {
         MQTTService.deleteTopic(topic);
     })
     socket.on('publish',({topic,message,qos,retain}) => {
+        console.log({topic,message,qos,retain})
         MQTTService.publishToTopic(topic,message,qos,retain);
     })
 });

@@ -82,7 +82,6 @@ function refrecheTopicsTable() {
     for (const type in window.topics) {
       window.topics[type].forEach((entry, index) => {
         const row = document.createElement('tr');
-
         row.innerHTML = `
           <td>${type}</td>
           <td>${entry.topic}</td>
