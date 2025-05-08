@@ -1,4 +1,4 @@
-const { subscribe, unsubscribe } = require('diagnostics_channel');
+
 const mqtt = require('mqtt');
 
 let socket=null;
@@ -51,7 +51,11 @@ function connectToMQTT(url, options) {
         });
       }
     });
-  
+    mqttClient.on('offline', () => {
+      console.log('MQTT offline');
+      mqttStatus = 'offline';
+      socket.emit('mqtt_status', { status: mqttStatus });
+    })
     mqttClient.on('message', (topic, message) => {
       const exict = topicExists(topic);
       const type = exict.type
@@ -65,8 +69,10 @@ function connectToMQTT(url, options) {
     });
   
     mqttClient.on('error', (err) => {
+      if(mqttClient){
       if (mqttClient.connected || mqttClient.reconnecting) {
         disconnectMQTT();
+      }
       }
       console.error('MQTT Error:', err);
       mqttStatus = 'error';
@@ -121,8 +127,8 @@ function subscribeToTopic(type, topic, qos) {
         topics[type] = [{ topic:topic, qos:qos, status:'subscribe' }]; // Only one topic per predefined type
       } else {
         if (!topics[type]) topics[type] = [];
-
-            topics[type].push({ topic:topic, qos:qos, status:'subscribe' })
+        if(existe){if(existe.status ==="unsubscribe"){topics[type] = [{ topic:topic, qos:qos, status:'subscribe' }];}}
+        else{    topics[type].push({ topic:topic, qos:qos, status:'subscribe' })}
       }
       console.log(topics);
       socket.emit('topics',topics);
@@ -165,6 +171,7 @@ function deleteTopic(topic) {
   console.log('s......................delete');
   socket.emit('topics',topics)
 }
+
 
 function topicExists(searchTopic) {
   for (const type in topics) {
