@@ -102,7 +102,7 @@ function subscribeToTopic(type, topic, qos) {
   const existe= topicExists(topic)
   console.log(existe);
   if(existe){
-    if (existe === type) continue; // Skip current category
+  if(existe.status!='unsubscribe'){
     mqttError = {type: 'subscribtion_error', message: `topic already exists in type [${existe}]`};
     socket.emit('mqtt_error',mqttError);
     console.error(mqttError.type,mqttError.message);
@@ -166,12 +166,13 @@ function deleteTopic(topic) {
   socket.emit('topics',topics)
 }
 
-function topicExists(topicToFind, currentCategory) {
-  for (const category in topics) {
-
-    if (Array.isArray(topics[category])) {
-      const found = topics[category].some(entry => entry.topic === topicToFind);
-      if (found) return category;
+function topicExists(searchTopic) {
+  for (const type in topics) {
+    const topicList = topics[type];
+    for (const entry of topicList) {
+      if (entry.topic === searchTopic) {
+        return { type: type, status: entry.status };
+      }
     }
   }
   return null; // Topic not found
